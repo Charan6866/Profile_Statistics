@@ -1,0 +1,84 @@
+pipeline {
+
+    agent any
+ 
+    tools {
+
+        maven 'maven'
+
+        jdk 'jdk21'
+
+    }
+ 
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+
+                // Checkout using branch + URL only
+
+                git branch: 'main',
+                    url: 'https://github.com/Charan6866/Profile_Statistics_build.git'
+
+            }
+
+        }
+ 
+        stage('Build') {
+
+            steps {
+
+                bat 'mvn clean compile'
+
+            }
+
+        }
+ 
+        stage('Test') {
+
+            steps {
+
+                bat 'mvn test'
+
+            }
+
+           
+post {
+    always {
+        echo "Publishing Allure Report..."
+        
+        allure includeProperties: false,
+               jdk: '',
+               results: [[path: 'allure-results']]
+               
+        echo "Allure Report Successfully Generated!"
+    }
+}
+
+
+        }
+
+    }
+ 
+    post {
+
+        always {
+
+            echo 'Pipeline finished. Reports published.'
+
+            // === Added: Publish Extent (HTML) Report ===
+            publishHTML(target: [
+                reportDir: 'reports',   // <-- change to your folder if different
+                reportFiles: '*.html',            // <-- change to your Extent HTML file if different
+                reportName: 'Extent Report',
+                allowMissing: false,
+                keepAll: true,
+                alwaysLinkToLastBuild: true
+            ])
+
+        }
+
+    }
+
+}
